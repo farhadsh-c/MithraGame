@@ -21,6 +21,18 @@
 
 #define GAME_DRAWING_AREA_MEMORY_SIZE		(GAME_RES_WIDTH * GAME_RES_HEIGHT * (GAME_BPP / 8))
 
+typedef struct PEXEL32
+{
+	uint8_t Blue;
+
+	uint8_t Green;
+
+	uint8_t Red;
+
+	uint8_t Alpha;
+
+} PEXEL32;
+
 // GAMEBITMAP is any sort of bitmap, which might be a sprite, or a background, 
 // or a font sheet, or even the back buffer itself.
 typedef struct GAMEBITMAP
@@ -44,3 +56,5 @@ DWORD CreateMainGameWindow(void);
 BOOL GameIsAlreadyRunning(void);
 
 void ProcessPlayerInput(void);
+
+void RenderFrameGraphics(void);

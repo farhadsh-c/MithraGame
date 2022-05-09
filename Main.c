@@ -7,6 +7,8 @@ BOOL gGameIsRunning = TRUE;
 
 GAMEBITMAP gBackBuffer;
 
+MONITORINFO gMonitorInfo = {sizeof(MONITORINFO)};
+
 
 int __stdcall WinMain(_In_ HINSTANCE Instance, _In_opt_ HINSTANCE PreviousInstance, _In_ PSTR CommandLine, _In_ INT CmdShow)
 {
@@ -51,12 +53,14 @@ int __stdcall WinMain(_In_ HINSTANCE Instance, _In_opt_ HINSTANCE PreviousInstan
 
 	gBackBuffer.Memory = VirtualAlloc(NULL, GAME_DRAWING_AREA_MEMORY_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
+
 	if (gBackBuffer.Memory == NULL)
 	{
 		MessageBoxA(NULL, "Failed to allocate memory for drawing surface!", "Error!", MB_ICONERROR | MB_OK);
 
 		goto Exit;
 	}
+	memset(gBackBuffer.Memory, 0x7F, GAME_DRAWING_AREA_MEMORY_SIZE);
 
 	while (gGameIsRunning == TRUE)
 	{
@@ -68,14 +72,15 @@ int __stdcall WinMain(_In_ HINSTANCE Instance, _In_opt_ HINSTANCE PreviousInstan
 
 		ProcessPlayerInput();
 
-		
+		RenderFrameGraphics();
+
 		Sleep(1);
 	}
 
 Exit:
-		
+
 	return (0);
-	
+
 }
 
 
@@ -127,7 +132,7 @@ DWORD CreateMainGameWindow(void)
 
 	WindowClass.hCursor = LoadCursorA(NULL, IDC_ARROW);
 
-	WindowClass.hbrBackground = CreateSolidBrush(RGB(0, 0, 0));
+	WindowClass.hbrBackground = CreateSolidBrush(RGB(255, 0, 255));
 
 	WindowClass.lpszMenuName = NULL;
 
@@ -160,6 +165,16 @@ DWORD CreateMainGameWindow(void)
 		goto Exit;
 	}
 
+	if (GetMonitorInfoA(MonitorFromWindow(gGameWindow, MONITOR_DEFAULTTOPRIMARY), &gMonitorInfo) == 0)
+	{
+		Result = ERROR_MONITOR_NO_DESCRIPTOR;
+
+		goto Exit;
+	}
+
+	int MonitorWidth = gMonitorInfo.rcMonitor.right - gMonitorInfo.rcMonitor.left;
+
+	int MonitorHeight = gMonitorInfo.rcMonitor.bottom - gMonitorInfo.rcMonitor.top;
 
 Exit:
 
@@ -190,5 +205,14 @@ void ProcessPlayerInput(void)
 	{
 		SendMessageA(gGameWindow, WM_CLOSE, 0, 0);
 	}
+}
 
+void RenderFrameGraphics(void)
+{
+	HDC DeviceContext = GetDC(gGameWindow);
+
+	StretchDIBits(DeviceContext, 0, 0, 100, 100, 0, 0, 100, 100, gBackBuffer.Memory, &gBackBuffer, DIB_RGB_COLORS, SRCAND);
+
+	ReleaseDC(gGameWindow, DeviceContext);
+	;
 }
